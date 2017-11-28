@@ -1,5 +1,3 @@
-package sample;
-
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,23 +10,27 @@ import javafx.stage.Stage;
 
 import java.io.*;
 import java.net.Socket;
+import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Random;
 
 /**
  * Created by Crispino on 11/17/2017.
  */
-public class Jogo{
+public class JogoImpl extends UnicastRemoteObject implements Jogo{
 
     private final int TAMANHO_TABELA = 10;
+    private Jogo jogoOponente;
+    private int id;
     private Stage theStage;
     private GridController gridController;
-    private Socket cnxSocket;
     private boolean solicitante;
     private boolean vez;
     private boolean acabou = false;
     private boolean tabelaNavios[][];
     private boolean tabelaNaviosOponente[][];
+    private boolean tabelaRegistroDisparos[][];
     private final Integer navios[][] = {
             {1,5}, //porta-aviões
             {2,4}, //navios-tanque
@@ -39,17 +41,19 @@ public class Jogo{
     private int nCasasRestantesOponente;
 
 
-    public Jogo(Stage stage,Socket cnxSocket,boolean solicitante){
+    public JogoImpl(Stage stage, boolean solicitante, int id, Jogo jogoOponente) throws RemoteException{
         this.theStage = stage;
-        this.cnxSocket = cnxSocket;
         this.solicitante = solicitante;
         this.vez = solicitante;
+        this.jogoOponente = jogoOponente;
 
         this.nCasasRestantes = this.getNCasasRestantes();
         this.nCasasRestantesOponente = this.getNCasasRestantes();
 
         this.tabelaNaviosOponente = new boolean[this.TAMANHO_TABELA][this.TAMANHO_TABELA];
+        this.tabelaRegistroDisparos = new boolean[this.TAMANHO_TABELA][this.TAMANHO_TABELA];
 
+        this.id = id;
     }
 
     public int getNCasasRestantes(){
@@ -61,7 +65,7 @@ public class Jogo{
     }
 
 
-    private boolean[][] geraTabelaNavios(int tamanho){
+    public boolean[][] geraTabelaNavios(int tamanho){
         int nTiposNavios = 4;
         ArrayList<Integer[]> listaNavios = new ArrayList<>();
 
@@ -88,13 +92,6 @@ public class Jogo{
                     System.out.println(nIteracoesLaco);
 
                     return null;
-                    /*nTiposNavios = 4;
-                    listaNavios.clear();
-                    for (int i = 0; i < nTiposNavios; ++i)
-                        listaNavios.add(this.navios[i]);
-
-                    nIteracoesLaco = 0;
-                    break;*/
                 }
                 horizontal = gen.nextBoolean();
 
@@ -180,13 +177,12 @@ public class Jogo{
 
     public void carregarCenaJogo(){
 
-        System.out.println("Jogo iniciado!");
+        System.out.println("JogoImpl iniciado!");
 
 
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                Socket cnxSocket = null;
 
                 System.out.println("Gerando tabela dos navios...");
                 while(tabelaNavios == null) {
@@ -195,47 +191,84 @@ public class Jogo{
                     tabelaNavios = geraTabelaNavios(10);
                 }
 
-                boolean tabelaNaviosProprio[][] = getTabelaNaviosProprio(),
-                        tabelaNaviosOponente[][] = getTabelaNaviosOponente();
 
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("TelaPrincipalGrid.fxml"));
-                gridController = new GridController();
-
-                loader.setController(gridController);
-
-                Parent root = null;
                 try {
-                    root = loader.load();
-                } catch (IOException e) {
+                    boolean tabelaNaviosProprio[][] = getTabelaNaviosProprio(),
+                            tabelaNaviosOponente[][] = getTabelaNaviosOponente();
+
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("TelaPrincipalGrid.fxml"));
+                    gridController = new GridController();
+
+                    loader.setController(gridController);
+
+                    Parent root = null;
+                    try {
+                        root = loader.load();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    theStage.setScene(new Scene(root));
+                    theStage.show();
+
+                    Platform.runLater(() -> {
+                        System.out.println("CARREGOU NOVA CENA!!!");
+
+                        gridController.setGridOponente(tabelaNaviosOponente);
+                        gridController.setGridProprio(tabelaNaviosProprio);
+
+
+                        String textoLabel;
+                        if (vez)
+                            textoLabel = "Sua vez!";
+                        else
+                            textoLabel = "Vez do oponente!";
+
+                        gridController.mudaTextoLabel(textoLabel);
+
+
+                        iniciarJogo();
+                    });
+
+
+                }
+                catch(RemoteException e){
                     e.printStackTrace();
                 }
-
-                theStage.setScene(new Scene(root));
-                theStage.show();
-
-                Platform.runLater(() -> {
-                    System.out.println("CARREGOU NOVA CENA!!!");
-
-                    gridController.setGridOponente(tabelaNaviosOponente);
-                    gridController.setGridProprio(tabelaNaviosProprio);
-
-
-                    String textoLabel;
-                    if (vez)
-                        textoLabel = "Sua vez!";
-                    else
-                        textoLabel = "Vez do oponente!";
-
-                    gridController.mudaTextoLabel(textoLabel);
-
-
-                    iniciarJogo();
-                });
 
 
             }
         });
 
+    }
+
+    @Override
+    public boolean disparo(int x, int y) throws RemoteException{
+
+        boolean acertou = this.checaTiro(x, y);
+        Color corParaPintar;
+
+        if (acertou){
+            corParaPintar = Color.GREEN;
+
+            if (--this.nCasasRestantes == 0){
+                //Acabou o jogo!
+                this.acabou = true;
+                this.setTextoLabel("Acabou o jogo, você perdeu!");
+            }
+        }
+        else{
+            corParaPintar = Color.BLUE;
+            this.trocaVez();
+
+            this.setTextoLabel("Sua vez!");
+        }
+
+        //pinta no tabuleiro do oponente o resultado do tiro
+        this.pintaQuadrado(x,y,corParaPintar.getRed(),corParaPintar.getGreen(),corParaPintar.getBlue());
+
+
+        return acertou;
     }
 
     public boolean checaTiro(int x,int y){
@@ -247,7 +280,6 @@ public class Jogo{
         Scene cenaJogo = this.theStage.getScene();
         GridPane gridOponente = this.gridController.getGridOponente(),
                  gridProprio = this.gridController.getGridProprio();
-        TextField text = (TextField)cenaJogo.lookup("#valorHost");
 
         gridOponente.setOnMouseClicked(event -> {
             if (!vez) return;
@@ -258,134 +290,79 @@ public class Jogo{
                  y = gridOponente.getRowIndex(rect).byteValue();
 
 
-            boolean acertou = false;
-            byte [] coordenadaTiro = {x,y};
-            int respostaOponente;
             try {
-                BufferedInputStream inOponente =
-                        new BufferedInputStream(this.cnxSocket.getInputStream());
-                DataOutputStream outOponente = new DataOutputStream(this.cnxSocket.getOutputStream());
+                //verifica se disparo nessas coordenadas já foi realizado
+                if (this.tabelaRegistroDisparos[x][y])
+                    return;
 
-                outOponente.write(coordenadaTiro);
-                System.out.println("Coordenadas do tiro enviadas para oponente!");
-                System.out.println("Coordenadas: " + x + "," + y);
-
-                respostaOponente = inOponente.read();
-                System.out.println("Resposta do oponente recebida!");
-                System.out.println("Resposta: " + respostaOponente);
-                acertou = respostaOponente == 1 ? true : false;
-
+                boolean acertou = this.jogoOponente.disparo(x,y);
                 Color corParaPintar;
-                if (acertou){
+
+                //registra o disparo
+                this.tabelaRegistroDisparos[x][y] = true;
+
+                if (acertou) {
                     corParaPintar = Color.GREEN;
 
-                    if (--this.nCasasRestantesOponente == 0){
+
+                    if (--this.nCasasRestantesOponente == 0) {
                         //Acabou o jogo!
                         this.acabou = true;
-                        Platform.runLater(() -> gridController.mudaTextoLabel("Acabou o jogo, você venceu!"));
-                        cnxSocket.close();
+                        this.setTextoLabel("Acabou o jogo, você venceu!");
+                        jogoOponente.setTextoLabel("Acabou o jogo, você perdeu!");
                     }
                 }
                 else{
                     corParaPintar = Color.BLUE;
-                    this.vez = !this.vez;
+                    this.trocaVez();
+
+                    this.setTextoLabel("Vez do oponente!");
+                    jogoOponente.setTextoLabel("Sua vez!");
                 }
-
-                //pinta no tabuleiro do oponente o resultado do tiro
-                gridController.pintaQuadradoOponente(x,y,corParaPintar);
-                System.out.println("vez: " + this.vez);
-
-            }
-            catch(IOException e){
+                this.gridController.pintaQuadradoOponente(x,y,corParaPintar);
+            } catch (RemoteException e) {
                 e.printStackTrace();
             }
 
         });
 
-        //nova thread que espera pela jogada do oponente se a vez nao for do jogador
-        Thread esperaConexaoOponente = new Thread(() -> {
-            while(true){
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (this.acabou) break;
-                if (!this.vez){
-                    Platform.runLater(() -> gridController.mudaTextoLabel("Vez do oponente!"));
-
-                    System.out.println("Esperando mensagem do oponente...");
-
-                    boolean acertou = false;
-                    byte [] coordenadaTiro = new byte[2];
-                    try {
-                        BufferedInputStream inOponente =
-                                new BufferedInputStream(this.cnxSocket.getInputStream());
-                        DataOutputStream outOponente = new DataOutputStream(this.cnxSocket.getOutputStream());
-
-                        inOponente.read(coordenadaTiro);
-
-                        System.out.println("Coordenadas do tiro do oponente recebidos!");
-                        System.out.println("Coordenadas: " + coordenadaTiro[0] + ',' + coordenadaTiro[1]);
-
-                        acertou = this.checaTiro(coordenadaTiro[0], coordenadaTiro[1]);
-
-                        outOponente.writeBoolean(acertou);
-                    }
-                    catch(IOException e){
-                        this.setFinalizado();
-                        e.printStackTrace();
-                    }
-                    System.out.println("Resultado do tiro recebido!");
-                    System.out.println("Resultado: " + acertou);
-                    System.out.println();
-
-
-                    Color corParaPintar;
-                    if (acertou){
-                        corParaPintar = Color.GREEN;
-
-                        if (--this.nCasasRestantes == 0){
-                            //Acabou o jogo!
-                            this.acabou = true;
-                            Platform.runLater(() -> gridController.mudaTextoLabel("Acabou o jogo, você perdeu!"));
-                            try {
-                                cnxSocket.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                    }
-                    else{
-                        corParaPintar = Color.BLUE;
-                        this.vez = !this.vez;
-
-                        Platform.runLater(() -> gridController.mudaTextoLabel("Sua vez!"));
-                    }
-                    System.out.println("ncasasrestantes: " + nCasasRestantes);
-
-                    //pinta no tabuleiro resultado do tiro
-                    gridController.pintaQuadradoProprio(coordenadaTiro[0],coordenadaTiro[1],corParaPintar);
-
-                }
-            }
-        });
-
-        esperaConexaoOponente.start();
-
     }
 
-    public void setFinalizado(){
+    @Override
+    public void trocaVez() throws RemoteException {
+        this.vez = !this.vez;
+    }
+
+    @Override
+    public void pintaQuadrado(int x, int y, double r, double g, double b) throws RemoteException {
+        this.gridController.pintaQuadradoProprio(x,y,new Color(r,g,b,1));
+    }
+
+    public void setFinalizado() throws RemoteException{
         this.acabou = true;
     }
 
-    public boolean[][] getTabelaNaviosProprio(){
+    @Override
+    public void setJogoOponente(Jogo jogoOponente) throws RemoteException{
+        this.jogoOponente = jogoOponente;
+    }
+
+    @Override
+    public void setTextoLabel(String texto) throws RemoteException {
+        Platform.runLater(() -> this.gridController.mudaTextoLabel(texto));
+    }
+
+    @Override
+    public int getID() throws RemoteException {
+        return this.id;
+    }
+
+    public boolean[][] getTabelaNaviosProprio() throws RemoteException{
         return this.tabelaNavios;
     }
 
 
-    public boolean[][] getTabelaNaviosOponente(){
+    public boolean[][] getTabelaNaviosOponente() throws RemoteException{
         return this.tabelaNaviosOponente;
     }
 }

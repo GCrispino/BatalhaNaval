@@ -1,5 +1,3 @@
-package sample;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -60,8 +58,8 @@ public class PrimeiraSceneController {
             return;
         }
 
-        Jogo jogo = new Jogo(theStage,cnxSocket,true);
-        jogo.carregarCenaJogo();
+        /*JogoImpl jogo = new JogoImpl(theStage,true,0);
+        jogo.carregarCenaJogo();*/
 
     }
 

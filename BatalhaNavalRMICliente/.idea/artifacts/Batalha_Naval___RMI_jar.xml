@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Batalha Naval - RMI:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Batalha_Naval___RMI_jar</output-path>
+    <root id="archive" name="Batalha Naval - RMI.jar">
+      <element id="module-output" name="Batalha Naval - RMI" />
+    </root>
+  </artifact>
+</component>
