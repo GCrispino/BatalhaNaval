@@ -29,7 +29,7 @@ const
 
 const 
 	app = express(),
-	porta = process.env.port || 8888,
+	porta = process.env.PORT || 8888,
 	STATUS_PARTIDA = {
 		INICIADA: 0,
 		ACEITA: 1,
