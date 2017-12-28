@@ -24,7 +24,7 @@ class App extends Component {
 
     this.setState({ loading: true });
 
-    fetch(`http://localhost:8888/jogador/${nomeJogador}`, {
+    fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${nomeJogador}`, {
       method: 'POST'
     })
       .then(res => res.json())

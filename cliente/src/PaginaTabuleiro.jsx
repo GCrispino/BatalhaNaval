@@ -26,7 +26,7 @@ export default class PaginaTabuleiro extends Component {
 
 		this.state = {};
 
-		fetch(`http://localhost:8888/jogador/${nomeJogador}`)
+		fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${nomeJogador}`)
 		.then(res => res.json())
 		.then(jogador => {
 
@@ -64,7 +64,7 @@ export default class PaginaTabuleiro extends Component {
 
 	componentDidUpdate(){
 		if (this.state.jogoFinalizado && this.state.vez){
-			fetch(`http://localhost:8888/jogador/${this.state.jogador.nome}/partida/`)
+			fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${this.state.jogador.nome}/partida/`)
 			.then(res => res.json())
 			.then(partida => {
 				if (partida.erro)
@@ -74,7 +74,7 @@ export default class PaginaTabuleiro extends Component {
 
 				headers.append('Content-Type', 'application/json');
 
-				return fetch(`http://localhost:8888/partida/${partida.id}`, {
+				return fetch(`https://batalha-naval-webservice.herokuapp.com/partida/${partida.id}`, {
 					method: 'DELETE',
 					headers
 				});
@@ -96,7 +96,7 @@ export default class PaginaTabuleiro extends Component {
 			{nome,tabuleiro} = jogador;
 
 		console.log('dentro ouvir disparo!');
-		fetch(`http://localhost:8888/jogador/${nome}/disparo/ouvir`)
+		fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${nome}/disparo/ouvir`)
 		.then(res => res.json())
 		.then(disparo => {
 			const 
@@ -150,7 +150,7 @@ export default class PaginaTabuleiro extends Component {
 		console.log(elem);
 		console.log(x, y);
 
-		fetch(`http://localhost:8888/jogador/${this.state.jogador.nome}/disparo`,{
+		fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${this.state.jogador.nome}/disparo`,{
 			method: 'POST',
 			headers,
 			body: JSON.stringify(disparo)

@@ -17,10 +17,10 @@ class EscolhaJogadores extends Component {
 	componentDidMount = () => {
 		console.log('componentDidMount');
 
-		fetch('http://localhost:8888/jogador/')
+		fetch('https://batalha-naval-webservice.herokuapp.com/jogador/')
 		.then(res => res.json())
 		.then(jogadores => this.setState({jogadores}))
-		.then(() => fetch(`http://localhost:8888/jogador/${this.props.nomeJogador}/partida/ouvir`))
+		.then(() => fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${this.props.nomeJogador}/partida/ouvir`))
 		.then(res => res.json())
 		.then(partida => {
 			const {nomeJogadorSolicitante} = partida;
@@ -31,7 +31,7 @@ class EscolhaJogadores extends Component {
 
 
 			console.log(partida);
-			return fetch(`http://localhost:8888/partida/${partida.id}/status/${status}`,{
+			return fetch(`https://batalha-naval-webservice.herokuapp.com/partida/${partida.id}/status/${status}`,{
 				method: 'PUT'
 			})
 			.then(res => {
@@ -62,7 +62,7 @@ class EscolhaJogadores extends Component {
 		const headers = new Headers();
 		headers.append('Content-Type', 'application/json');
 
-		fetch(`http://localhost:8888/partida/${jogadorSelecionado.nome}`,{
+		fetch(`https://batalha-naval-webservice.herokuapp.com/partida/${jogadorSelecionado.nome}`,{
 			method: 'POST',
 			// mode: 'cors',
 			headers,
@@ -78,7 +78,7 @@ class EscolhaJogadores extends Component {
 			else{
 				this.setState({ loading: false,aguardandoOponente: true });
 
-				return fetch(`http://localhost:8888/partida/${partida.id}/ouvir`);
+				return fetch(`https://batalha-naval-webservice.herokuapp.com/partida/${partida.id}/ouvir`);
 			}
 
 		})
