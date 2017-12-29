@@ -2,7 +2,7 @@
   "name": "batalha-naval-web-service",
   "version": "0.1.0",
   "private": true,
-  "homepage": "./",
+  "homepage": "https://gcrispino.github.io/BatalhaNaval",
   "dependencies": {
     "bootstrap": "^3.3.7",
     "jquery": "^3.2.1",
