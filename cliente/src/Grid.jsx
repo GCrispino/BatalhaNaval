@@ -36,7 +36,7 @@ export default class Grid extends Component{
 
 	render(){
 		return (
-			<svg id='grid' width='1000' height='1000'>
+			<svg id='grid' width={this.props.width} height={this.props.height}>
 				{this.constroiGrid()}
 			</svg>
 		);

@@ -1,8 +1,14 @@
+#containerTabuleiro{
+	width: 760px;
+	margin: auto;
+}
+
 #tabuleiroOponente{
+	display: inline-block;
 	margin: auto;
 }
 
 #tabuleiroJogador{
-	float:right;
-	right: 0;
+	display: inline-block;
+	width: 200px;
 }

@@ -5,6 +5,14 @@ import PaginaInicial from './PaginaInicial';
 import EscolhaJogadores from './EscolhaJogadores';
 import PaginaTabuleiro from './PaginaTabuleiro';
 
+
+global.$ = global.jQuery = require('jquery');
+require('../node_modules/bootstrap/dist/css/bootstrap.min.css');
+require('../node_modules/bootstrap/dist/js/bootstrap');
+
+
+console.log(global.$);
+
 class App extends Component {
  
   componentWillMount = () => {

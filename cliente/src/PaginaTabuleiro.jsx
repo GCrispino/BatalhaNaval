@@ -193,23 +193,23 @@ export default class PaginaTabuleiro extends Component {
 
 	render(){
 		return (
-			<div>
+			<div id='containerTabuleiro'>
 			{
 				this.state.jogador ?
 				<div>
 					{
 						this.state.jogoFinalizado ?
 							this.state.venceu ?
-								<p>Você venceu o jogo!</p>
+								<h2>Você venceu o jogo!</h2>
 								: this.state.perdeu ?
-								<p>Você perdeu o jogo!</p>
-								: <p>Erro</p>
-						: <p>Jogador {this.state.jogador.nome}</p>
+								<h2>Você perdeu o jogo!</h2>
+								: <h2>Erro</h2>
+						: <h2>Jogador {this.state.jogador.nome}</h2>
 					}
 					{
 						this.state.vez ?
-						<p>Sua vez!</p>
-						:<p>Vez do oponente!</p>
+						<h3>Sua vez!</h3>
+						:<h3>Vez do oponente!</h3>
 					}
 					<Grid 
 						id='tabuleiroOponente' 
@@ -217,8 +217,17 @@ export default class PaginaTabuleiro extends Component {
 						onClickQuadrado = {this.handleClickTabuleiroOponente}
 						tamQuadrado={60} 
 						corQuadrado='#CD5C5C' /*corQuadradoSelecionado='#2068db'*/ 
-						espacoQuadrados={5}/>
-					<Grid id='tabuleiroJogador' tabuleiro={this.state.tabuleiroDisparosOponente} tamQuadrado={10} corQuadrado='#CD5C5C' espacoQuadrados={2}/>
+						espacoQuadrados={5}
+						width={650}
+						height={650}/>
+					<Grid 
+						id='tabuleiroJogador' 
+						tabuleiro={this.state.tabuleiroDisparosOponente} 
+						tamQuadrado={10} 
+						corQuadrado='#CD5C5C' 
+						espacoQuadrados={2}
+						width={120}
+						height={120}/>
 				</div>
 				:<p>Carregando tabuleiro...</p>
 			}

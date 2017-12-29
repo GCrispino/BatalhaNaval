@@ -1,11 +1,28 @@
-
+button{
+	margin-top: 10px;
+    width: 170px;
+    font-size: 19px;
+    font-weight: bold;
+}
 
 li{
-	width: 100px;
+	width: 150px;
 	text-align: center;
+	border: 1px solid white;
+	margin-bottom:5px;
+	transition: background .5s;
+}
+
+li:hover{
+	cursor: pointer;
+	border-color: black;
+	transition: border-color 0.5s
 }
 
 #lista{
+	width: 220px;
+	font-size: 20px;
+	margin: auto;
 	list-style: none;
 }
 
