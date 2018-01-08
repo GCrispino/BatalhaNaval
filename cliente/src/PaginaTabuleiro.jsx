@@ -4,6 +4,7 @@
 
 
 import React, { Component } from 'react';
+import Loader from 'react-loader';
 import Grid from './Grid.jsx';
 import './PaginaTabuleiro.css';
 
@@ -229,7 +230,7 @@ export default class PaginaTabuleiro extends Component {
 						width={120}
 						height={120}/>
 				</div>
-				:<p>Carregando tabuleiro...</p>
+				:<Loader position='relative' className='spinner'/>
 			}
 			</div>
 		);

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Loader from 'react-loader';
 
 
 class PaginaInicial extends Component {
@@ -16,7 +17,7 @@ class PaginaInicial extends Component {
 			<div>
 			{
 				this.state.loading ?
-					<p>Carregando...</p>
+					<Loader position='relative' className='spinner' />
 				:
 					<div>
 						<form onSubmit={this.props.handleSubmit}>	

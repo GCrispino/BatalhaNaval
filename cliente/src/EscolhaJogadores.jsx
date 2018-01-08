@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Loader from 'react-loader';
 import ListaJogadores from './ListaJogadores';
 
 class EscolhaJogadores extends Component {
@@ -109,7 +110,7 @@ class EscolhaJogadores extends Component {
 						<ListaJogadores jogadores={this.state.jogadores} iJogadorSelecionado={this.state.iJogadorSelecionado} onClickItemLista={this.handleClickItemLista}/>
 						<button onClick={this.handleClickSolicitarPartida}>Solicitar partida!</button>
 					</div>
-					: <p>Carregando...</p>
+					: <Loader position='relative' className='spinner'/>
 				}
 				
 			</div>

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Loader from 'react-loader';
 import logo from './logo.svg';
 import './App.css';
 import PaginaInicial from './PaginaInicial';
@@ -10,8 +11,6 @@ global.$ = global.jQuery = require('jquery');
 require('../node_modules/bootstrap/dist/css/bootstrap.min.css');
 require('../node_modules/bootstrap/dist/js/bootstrap');
 
-
-console.log(global.$);
 
 class App extends Component {
  
@@ -49,9 +48,12 @@ class App extends Component {
 
   render() {
     return (
-      // <EscolhaJogadores onInicioJogo={this.inicioJogo} nomeJogador={'Fulano'}/>
       <div>
       {
+        this.state.loading ?
+        <Loader position='relative' className='spinner'/>
+        :
+        
         this.state.registrado ?
           this.state.jogoIniciado ?
             <PaginaTabuleiro vez={this.state.vez} nomeJogador={this.state.nomeJogador}/>

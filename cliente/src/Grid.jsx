@@ -4,11 +4,9 @@ export default class Grid extends Component{
 	constructor(props){
 		super(props);
 
-
-		this.constroiGrid = this.constroiGrid.bind(this);
 	}
 
-	constroiGrid(){
+	constroiGrid = () => {
 		const 
 			{tabuleiro,tamQuadrado,corQuadrado,corQuadradoSelecionado,espacoQuadrados} = this.props,
 			altura = tabuleiro.length,largura = tabuleiro[0].length;
