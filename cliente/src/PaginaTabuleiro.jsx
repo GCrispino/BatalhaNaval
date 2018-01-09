@@ -25,7 +25,7 @@ export default class PaginaTabuleiro extends Component {
 
 		const {vez,nomeJogador} = props;
 
-		this.state = {};
+		this.state = {aguardando: false};
 
 		fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${nomeJogador}`)
 		.then(res => res.json())
@@ -151,6 +151,7 @@ export default class PaginaTabuleiro extends Component {
 		console.log(elem);
 		console.log(x, y);
 
+		this.setState({aguardando: true});
 		fetch(`https://batalha-naval-webservice.herokuapp.com/jogador/${this.state.jogador.nome}/disparo`,{
 			method: 'POST',
 			headers,
@@ -161,6 +162,7 @@ export default class PaginaTabuleiro extends Component {
 			const {tabuleiroDisparos} = this.state;
 			console.log(acertou);
 			let fill;
+			this.setState({aguardando: false});
 			if (acertou){
 				const 
 					nDisparosCertosNovo = this.state.nDisparosCertos + 1,
@@ -193,6 +195,7 @@ export default class PaginaTabuleiro extends Component {
 	};
 
 	render(){
+
 		return (
 			<div id='containerTabuleiro'>
 			{
@@ -212,6 +215,7 @@ export default class PaginaTabuleiro extends Component {
 						<h3>Sua vez!</h3>
 						:<h3>Vez do oponente!</h3>
 					}
+					{this.state.aguardando ? <Loader /> : null}
 					<Grid 
 						id='tabuleiroOponente' 
 						tabuleiro={this.state.tabuleiroDisparos} 
@@ -230,7 +234,7 @@ export default class PaginaTabuleiro extends Component {
 						width={120}
 						height={120}/>
 				</div>
-				:<Loader position='relative' className='spinner'/>
+				: <Loader position='relative' className='spinner'/>
 			}
 			</div>
 		);
