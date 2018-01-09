@@ -77,7 +77,7 @@ class EscolhaJogadores extends Component {
 				alert(resJSON.erro);
 			}
 			else{
-				this.setState({ loading: false,aguardandoOponente: true });
+				this.setState({ aguardandoOponente: true });
 
 				return fetch(`https://batalha-naval-webservice.herokuapp.com/partida/${partida.id}/ouvir`);
 			}
@@ -102,15 +102,17 @@ class EscolhaJogadores extends Component {
 
 
 	render() {
+		const loader = <Loader position='relative' className='spinner'/>;
 		return (
 			<div>
+				{this.state.aguardandoOponente ? loader : null}
 				{
 					this.state.jogadores ?
 					<div>
 						<ListaJogadores jogadores={this.state.jogadores} iJogadorSelecionado={this.state.iJogadorSelecionado} onClickItemLista={this.handleClickItemLista}/>
 						<button onClick={this.handleClickSolicitarPartida}>Solicitar partida!</button>
 					</div>
-					: <Loader position='relative' className='spinner'/>
+					: loader//<Loader position='relative' className='spinner'/>
 				}
 				
 			</div>
