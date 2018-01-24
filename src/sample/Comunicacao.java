@@ -205,16 +205,16 @@ public class Comunicacao {
 
                         Color corParaPintar;
                         if (acertou){
-                            int nCasasRestantes = jogo.getNCasasRestantes();
+                            int nCasasRestantesOponente = jogo.getNCasasRestantesOponente();
                             corParaPintar = Color.GREEN;
 
-                            if ((nCasasRestantes - 1) == 0){
+                            if ((nCasasRestantesOponente - 1) == 0){
                                 //Acabou o jogo!
-                                jogo.setFinalizado();
                                 Platform.runLater(() -> jogo.getGridController().mudaTextoLabel("Acabou o jogo, você venceu!"));
+                                jogo.setFinalizado();
                             }
 
-                            jogo.setNCasasRestantes(nCasasRestantes - 1);
+                            jogo.setNCasasRestantesOponente(nCasasRestantesOponente - 1);
                         }
                         else{
                             corParaPintar = Color.BLUE;

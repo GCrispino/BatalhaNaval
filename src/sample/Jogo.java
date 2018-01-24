@@ -14,7 +14,6 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
 import java.io.*;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
@@ -43,8 +42,8 @@ public class Jogo{
     };
     private final int DISPARO = 0;
     private final int RESULTADO_DISPARO = 1;
-    private int nCasasRestantes;
-    private int nCasasRestantesOponente;
+    private int nCasasRestantes = 0;
+    private int nCasasRestantesOponente = 0;
 
 
     public Jogo(Stage stage,boolean solicitante,String idJogador,String idOponente){
@@ -58,7 +57,6 @@ public class Jogo{
         this.nCasasRestantesOponente = this.calculaNCasasRestantesInicial();
 
         this.tabelaNaviosOponente = new boolean[this.TAMANHO_TABELA][this.TAMANHO_TABELA];
-
     }
 
     private boolean[][] geraTabelaNavios(int tamanho){
@@ -186,7 +184,6 @@ public class Jogo{
         Platform.runLater(new Runnable() {
             @Override
             public void run() {
-                Socket cnxSocket = null;
 
                 System.out.println("Gerando tabela dos navios...");
                 while(tabelaNavios == null) {
@@ -297,8 +294,6 @@ public class Jogo{
     }
 
     public void setFinalizado(){
-        this.comm.fecharConexao();
-
         this.acabou = true;
     }
 
@@ -318,6 +313,12 @@ public class Jogo{
 
     public void setNCasasRestantes(int nCasasRestantes){
         this.nCasasRestantes = nCasasRestantes;
+    }
+
+    public int getNCasasRestantesOponente(){return this.nCasasRestantesOponente;}
+
+    public void setNCasasRestantesOponente(int nCasasRestantes){
+        this.nCasasRestantesOponente = nCasasRestantes;
     }
 
     public boolean getVez(){

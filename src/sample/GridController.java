@@ -22,12 +22,9 @@ public class GridController implements Initializable{
     public GridPane gridOponente;
     public GridPane gridProprio;
     public Label estadoJogo;
-    private Rectangle rects[][];
     private Rectangle rectsOponente[][];
     private Rectangle rectsProprio[][];
     private boolean tabela[][];
-    private GridPane gridPane;
-    private int tamQuadrado;
     private final int largura = 10;
     private final int altura = 10;
     private final int tamQuadradoOponente = 50;
@@ -35,7 +32,6 @@ public class GridController implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        System.out.println("ABRIU!");
     }
 
     public void GridController(){

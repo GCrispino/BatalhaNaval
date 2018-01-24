@@ -7,15 +7,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Date;
-import java.util.concurrent.TimeoutException;
 
 public class Main extends Application {
-    private ServerSocket welcomeSocket = null;
-    private Socket connectionSocket = null;
     private Jogo jogo = null;
     private String host;
     private String idJogador;
@@ -23,9 +17,7 @@ public class Main extends Application {
     private boolean solicitante = false;
     private Comunicacao comm;
 
-    private final static String QUEUE_NAME = "hello";
-
-
+    private final static String QUEUE_NAME = "jogadores";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
