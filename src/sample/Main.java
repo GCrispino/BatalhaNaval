@@ -1,7 +1,7 @@
 package sample;
 
+import com.rabbitmq.client.*;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -10,75 +10,53 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-
+import java.util.Date;
+import java.util.concurrent.TimeoutException;
 
 public class Main extends Application {
     private ServerSocket welcomeSocket = null;
     private Socket connectionSocket = null;
     private Jogo jogo = null;
-    private int porta;
+    private String host;
+    private String idJogador;
+    private Stage primaryStage;
+    private boolean solicitante = false;
+    private Comunicacao comm;
+
+    private final static String QUEUE_NAME = "hello";
+
 
 
     @Override
     public void start(Stage primaryStage) throws Exception {
 
+        this.comm = null;
+
+        this.primaryStage = primaryStage;
         Parameters params = this.getParameters();
 
         try {
-            porta = Integer.parseInt(params.getRaw().get(0));
+            host = params.getRaw().get(0);
         }
         catch(IndexOutOfBoundsException e){
-            porta = 3000;
+            host = "localhost";
         }
 
-        System.out.println("Porta: " + porta);
+        System.out.println("host: " + host);
 
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost(host);
+        Connection connection = null;
+        this.idJogador = new Long((new Date()).getTime()).toString();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run(){
-                try {
-                    welcomeSocket = new ServerSocket(porta);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        connection = factory.newConnection();
 
-                System.out.println("Esperando conexão de um oponente...");
+        comm = new Comunicacao(connection,jogo,primaryStage);
 
-                try {
-                    connectionSocket = welcomeSocket.accept();
+        comm.consomeIDJogador(this.idJogador,this.QUEUE_NAME);
 
-                    System.out.println("Recebeu!");
+        comm.enviaIDJogador(this.idJogador + ";1",this.QUEUE_NAME);
 
-                    String clientSentence, serverSentence = "vim do servidor!";
-                    BufferedReader inFromClient =
-                            new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-                    DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-                    clientSentence = inFromClient.readLine();
-                    System.out.println("Received: " + clientSentence);
-                    outToClient.writeBytes(serverSentence + '\n');
-                    System.out.println("Mensagem enviada para cliente: " + serverSentence);
-
-                    Platform.runLater(new Runnable() {
-                        @Override
-                        public void run() {
-                            System.out.println("Dentro do runLater");
-                            jogo = new Jogo(primaryStage,connectionSocket,false);
-
-                            jogo.carregarCenaJogo();
-                        }
-                    });
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-            }
-        }).start();
 
         Parent rootPrimeiraScene = FXMLLoader.load(getClass().getResource("PrimeiraScene.fxml"));
 
@@ -89,20 +67,16 @@ public class Main extends Application {
 
     @Override
     public void stop(){
-        try {
-            if (welcomeSocket != null)
-                welcomeSocket.close();
-            if (connectionSocket != null)
-                connectionSocket.close();
-            if (jogo != null)
-                jogo.setFinalizado();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        if (this.comm != null)
+            this.comm.fecharConexao();
+        if (this.jogo != null)
+            this.jogo.setFinalizado();
         System.out.println("Fechou");
     }
 
     public static void main(String[] args) {
         launch(args);
     }
+
+
 }

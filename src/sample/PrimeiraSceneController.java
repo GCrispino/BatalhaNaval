@@ -34,7 +34,7 @@ public class PrimeiraSceneController {
     }
 
     public void mudarParaGrid(ActionEvent actionEvent) throws IOException {
-
+/*
         Stage theStage = (Stage)((Node)actionEvent.getSource()).getScene().getWindow();
         Socket cnxSocket = null;
         String host = valorHost.getText();
@@ -60,8 +60,8 @@ public class PrimeiraSceneController {
             return;
         }
 
-        Jogo jogo = new Jogo(theStage,cnxSocket,true);
-        jogo.carregarCenaJogo();
+        Jogo jogo = new Jogo(theStage,true);
+        jogo.carregarCenaJogo();*/
 
     }
 

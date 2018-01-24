@@ -1,5 +1,8 @@
 package sample;
 
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -14,6 +17,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Created by Crispino on 11/17/2017.
@@ -23,8 +27,10 @@ public class Jogo{
     private final int TAMANHO_TABELA = 10;
     private Stage theStage;
     private GridController gridController;
-    private Socket cnxSocket;
+    private Comunicacao comm;
     private boolean solicitante;
+    private String idJogador;
+    private String idOponente;
     private boolean vez;
     private boolean acabou = false;
     private boolean tabelaNavios[][];
@@ -35,31 +41,25 @@ public class Jogo{
             {3,3}, //contratorpedeiros
             {4,2}  //submarinos
     };
+    private final int DISPARO = 0;
+    private final int RESULTADO_DISPARO = 1;
     private int nCasasRestantes;
     private int nCasasRestantesOponente;
 
 
-    public Jogo(Stage stage,Socket cnxSocket,boolean solicitante){
+    public Jogo(Stage stage,boolean solicitante,String idJogador,String idOponente){
         this.theStage = stage;
-        this.cnxSocket = cnxSocket;
         this.solicitante = solicitante;
         this.vez = solicitante;
+        this.idJogador = idJogador;
+        this.idOponente = idOponente;
 
-        this.nCasasRestantes = this.getNCasasRestantes();
-        this.nCasasRestantesOponente = this.getNCasasRestantes();
+        this.nCasasRestantes = this.calculaNCasasRestantesInicial();
+        this.nCasasRestantesOponente = this.calculaNCasasRestantesInicial();
 
         this.tabelaNaviosOponente = new boolean[this.TAMANHO_TABELA][this.TAMANHO_TABELA];
 
     }
-
-    public int getNCasasRestantes(){
-        int nCasasRestantes = 0;
-        for (Integer navio[]: this.navios)
-            nCasasRestantes += navio[0] * navio[1];
-
-        return nCasasRestantes;
-    }
-
 
     private boolean[][] geraTabelaNavios(int tamanho){
         int nTiposNavios = 4;
@@ -244,13 +244,43 @@ public class Jogo{
 
 
     public void iniciarJogo(){
+        String exchangeName = null;
+
+        if (this.solicitante)
+            exchangeName = this.idJogador + '-' + this.idOponente;
+        else
+            exchangeName = this.idOponente + '-' + this.idJogador;
+
+
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        Connection connection = null;
+
+        try {
+            connection = factory.newConnection();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+
+
+        this.comm = new Comunicacao(connection,this,exchangeName);
+
+
+        /**
+         * DESCOMENTAR CÓDIGO ABAIXO E REFATORAR PARA SER ADAPTADO!!!
+         */
+
+        comm.recebeDisparo();
+
         Scene cenaJogo = this.theStage.getScene();
         GridPane gridOponente = this.gridController.getGridOponente(),
                  gridProprio = this.gridController.getGridProprio();
         TextField text = (TextField)cenaJogo.lookup("#valorHost");
 
         gridOponente.setOnMouseClicked(event -> {
-            if (!vez) return;
+            if (!this.vez || this.acabou) return;
 
             Rectangle rect = (Rectangle)event.getTarget();
 
@@ -258,126 +288,60 @@ public class Jogo{
                  y = gridOponente.getRowIndex(rect).byteValue();
 
 
-            boolean acertou = false;
-            byte [] coordenadaTiro = {x,y};
-            int respostaOponente;
-            try {
-                BufferedInputStream inOponente =
-                        new BufferedInputStream(this.cnxSocket.getInputStream());
-                DataOutputStream outOponente = new DataOutputStream(this.cnxSocket.getOutputStream());
+            if (rect.getFill().equals(Color.GREEN)) return;
 
-                outOponente.write(coordenadaTiro);
-                System.out.println("Coordenadas do tiro enviadas para oponente!");
-                System.out.println("Coordenadas: " + x + "," + y);
+            comm.disparo(x,y);
 
-                respostaOponente = inOponente.read();
-                System.out.println("Resposta do oponente recebida!");
-                System.out.println("Resposta: " + respostaOponente);
-                acertou = respostaOponente == 1 ? true : false;
-
-                Color corParaPintar;
-                if (acertou){
-                    corParaPintar = Color.GREEN;
-
-                    if (--this.nCasasRestantesOponente == 0){
-                        //Acabou o jogo!
-                        this.acabou = true;
-                        Platform.runLater(() -> gridController.mudaTextoLabel("Acabou o jogo, você venceu!"));
-                        cnxSocket.close();
-                    }
-                }
-                else{
-                    corParaPintar = Color.BLUE;
-                    this.vez = !this.vez;
-                }
-
-                //pinta no tabuleiro do oponente o resultado do tiro
-                gridController.pintaQuadradoOponente(x,y,corParaPintar);
-                System.out.println("vez: " + this.vez);
-
-            }
-            catch(IOException e){
-                e.printStackTrace();
-            }
 
         });
-
-        //nova thread que espera pela jogada do oponente se a vez nao for do jogador
-        Thread esperaConexaoOponente = new Thread(() -> {
-            while(true){
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                if (this.acabou) break;
-                if (!this.vez){
-                    Platform.runLater(() -> gridController.mudaTextoLabel("Vez do oponente!"));
-
-                    System.out.println("Esperando mensagem do oponente...");
-
-                    boolean acertou = false;
-                    byte [] coordenadaTiro = new byte[2];
-                    try {
-                        BufferedInputStream inOponente =
-                                new BufferedInputStream(this.cnxSocket.getInputStream());
-                        DataOutputStream outOponente = new DataOutputStream(this.cnxSocket.getOutputStream());
-
-                        inOponente.read(coordenadaTiro);
-
-                        System.out.println("Coordenadas do tiro do oponente recebidos!");
-                        System.out.println("Coordenadas: " + coordenadaTiro[0] + ',' + coordenadaTiro[1]);
-
-                        acertou = this.checaTiro(coordenadaTiro[0], coordenadaTiro[1]);
-
-                        outOponente.writeBoolean(acertou);
-                    }
-                    catch(IOException e){
-                        this.setFinalizado();
-                        e.printStackTrace();
-                    }
-                    System.out.println("Resultado do tiro recebido!");
-                    System.out.println("Resultado: " + acertou);
-                    System.out.println();
-
-
-                    Color corParaPintar;
-                    if (acertou){
-                        corParaPintar = Color.GREEN;
-
-                        if (--this.nCasasRestantes == 0){
-                            //Acabou o jogo!
-                            this.acabou = true;
-                            Platform.runLater(() -> gridController.mudaTextoLabel("Acabou o jogo, você perdeu!"));
-                            try {
-                                cnxSocket.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                    }
-                    else{
-                        corParaPintar = Color.BLUE;
-                        this.vez = !this.vez;
-
-                        Platform.runLater(() -> gridController.mudaTextoLabel("Sua vez!"));
-                    }
-                    System.out.println("ncasasrestantes: " + nCasasRestantes);
-
-                    //pinta no tabuleiro resultado do tiro
-                    gridController.pintaQuadradoProprio(coordenadaTiro[0],coordenadaTiro[1],corParaPintar);
-
-                }
-            }
-        });
-
-        esperaConexaoOponente.start();
-
     }
 
     public void setFinalizado(){
+        this.comm.fecharConexao();
+
         this.acabou = true;
+    }
+
+    public GridController getGridController(){
+        return this.gridController;
+    }
+
+    public int calculaNCasasRestantesInicial(){
+        int nCasasRestantes = 0;
+        for (Integer navio[]: this.navios)
+            nCasasRestantes += navio[0] * navio[1];
+
+        return nCasasRestantes;
+    }
+
+    public int getNCasasRestantes(){return this.nCasasRestantes;}
+
+    public void setNCasasRestantes(int nCasasRestantes){
+        this.nCasasRestantes = nCasasRestantes;
+    }
+
+    public boolean getVez(){
+        return this.vez;
+    }
+
+    public void setVez(boolean vez){
+        this.vez = vez;
+
+        String texto = vez ? "Sua vez" : "Vez do oponente";
+
+        Platform.runLater(() -> this.gridController.mudaTextoLabel(texto));
+    }
+
+    public String getIDJogador(){
+        return this.idJogador;
+    }
+
+    public final int getFlagDisparo(){
+        return this.DISPARO;
+    }
+
+    public final int getFlagResultadoDisparo(){
+        return this.RESULTADO_DISPARO;
     }
 
     public boolean[][] getTabelaNaviosProprio(){
