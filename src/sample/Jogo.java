@@ -264,11 +264,6 @@ public class Jogo{
 
         this.comm = new Comunicacao(connection,this,exchangeName);
 
-
-        /**
-         * DESCOMENTAR CÓDIGO ABAIXO E REFATORAR PARA SER ADAPTADO!!!
-         */
-
         comm.recebeDisparo();
 
         Scene cenaJogo = this.theStage.getScene();

@@ -38,7 +38,6 @@ public class Comunicacao {
 
 
             channel.close();
-            //connection.close();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (TimeoutException e) {
